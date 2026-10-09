@@ -21,7 +21,13 @@ Only you need it. Other players and the host do not need the mod.
 - `[` (left square bracket): follow your primary target, only if your side has an accurate track on it. Press again to return to your aircraft.
 - `\` (backslash): return to your aircraft and the view you had before.
 
-After the followed missile hits or disappears, the camera holds for 2.5 s. Then it moves to your next missile in flight, or returns to your aircraft. Change keys and timings in `BepInEx/config/talamander.no.missilecam.cfg` (created on first start).
+After the followed missile hits or disappears, the camera holds for 2.5 s. Then it moves to your next missile in flight, or returns to your aircraft.
+
+## Change the keys in game
+
+Open the game's **Controls** menu and click **Missile Cam Keys** (added next to Edit Bindings). You can also press `Ctrl+F8` anywhere. Click a binding, then press the new key or joystick button; Escape cancels and **clear** removes a binding. Each action can have one keyboard key (with Shift/Ctrl/Alt if you hold them) and one joystick button. Changes save at once.
+
+Everything is also in `BepInEx/config/talamander.no.missilecam.cfg` (created on first start), including timings. BepInEx ConfigurationManager also shows these settings if you have it installed.
 
 ## What to report when testing
 
@@ -34,13 +40,14 @@ After the followed missile hits or disappears, the camera holds for 2.5 s. Then 
 
 Both missile and target controls are toggles.
 
-- `]` or MOZA AB6 button 12 (CycleMissile / MissileButton): the first press follows your first missile in flight. Each further press follows the next missile. After the last missile, the next press returns to your aircraft.
-- `[` or MOZA AB6 button 14 (ViewTarget / TargetButton): follows your primary target, only if your side has an accurate track on it. Pressing again returns to your aircraft.
-- `\` Return: back to your aircraft and the view you had before.
+- `]` or MOZA AB6 button 12 (`CycleMissile`, `CycleMissileDevice` / `CycleMissileButton`): the first press follows your first missile in flight. Each further press follows the next missile. After the last missile, the next press returns to your aircraft.
+- `[` or MOZA AB6 button 14 (`ViewTarget`, `ViewTargetDevice` / `ViewTargetButton`): follows your primary target, only if your side has an accurate track on it. Pressing again returns to your aircraft.
+- `\` (`Return`, `ReturnDevice` / `ReturnButton`, no joystick button by default): back to your aircraft and the view you had before.
+- `Ctrl+F8` (`OpenSettings`): the key binding window.
 
-Joystick buttons are optional and default to the MOZA AB6. With no matching joystick they do nothing. Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired by joystick name (`Joystick.DeviceName`, default `AB6`), so they need no game action.
+Joystick buttons are optional and default to the MOZA AB6. With no matching joystick they do nothing. Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired, matching part of the joystick name (`...Device`, default `AB6`), so they need no game action. Capturing a button in the binding window stores that joystick's full name.
 
-The game's own bindings on those buttons still fire. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
+The game's own bindings on those buttons still fire. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-<id>-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
 
 After the followed missile hits or disappears, the camera holds for `LingerSeconds` (2.5 s), then moves to your next missile in flight (`AutoNextMissile`) or returns to your aircraft.
 
@@ -55,7 +62,7 @@ After the followed missile hits or disappears, the camera holds for `LingerSecon
 
 ## Client/server requirements
 
-- Only the player who wants the camera installs it. No Harmony patches, no network messages. No camera code in the game sends a Cmd, Rpc or SyncVar (`CameraStateManager`, `Camera*State`, `UnitMapIcon`).
+- Only the player who wants the camera installs it. No network messages. Its only Harmony patch is a postfix on `ControlsMenu.Start` that adds the Missile Cam Keys button. No camera code in the game sends a Cmd, Rpc or SyncVar (`CameraStateManager`, `Camera*State`, `UnitMapIcon`).
 - Mirage visibility: Assembly-CSharp has no `NetworkVisibility` subclass, so Mirage uses its default `AlwaysVisible` (every scene-ready player observes every object). Missiles therefore exist on every client. This is from code; no packet capture was done.
 - No server setting controls spectating or the free camera (checked `MissionSettings`, `DedicatedServerConfig`, `HostOptions`). There is no anti-cheat in the assembly. `ModdedServer` is only a lobby label the host sets.
 - Unknown until a real test: whether a host or other players can notice the mod in any way. Nothing in the code suggests it.
