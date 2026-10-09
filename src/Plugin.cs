@@ -31,7 +31,7 @@ namespace Talamander.MissileCam
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
 
         internal static ManualLogSource Log;
 
@@ -106,21 +106,45 @@ namespace Talamander.MissileCam
         void Update()
         {
             if (!pluginEnabled.Value) return;
-            if (vrDetected && !allowInVR.Value) return;
+            bool missilePress = KeyPressed(cycleKey.Value) || JoystickButtonDown(missileButton.Value);
+            bool targetPress = KeyPressed(targetKey.Value) || JoystickButtonDown(targetButton.Value);
+            bool returnPress = KeyPressed(returnKey.Value);
+            bool anyPress = missilePress || targetPress || returnPress;
+
+            if (vrDetected && !allowInVR.Value) { if (anyPress) Flash("off in VR (set AllowInVR)"); return; }
             if (GameManager.gameState != GameState.SinglePlayer && GameManager.gameState != GameState.Multiplayer)
             {
                 if (Active) ResetState("left gameplay");
+                if (anyPress) Log.LogInfo($"Press ignored: game state {GameManager.gameState}.");
                 return;
             }
             var cam = SceneSingleton<CameraStateManager>.i;
-            if (cam == null) { if (Active) ResetState("no camera"); return; }
+            if (cam == null)
+            {
+                if (Active) ResetState("no camera");
+                if (anyPress) Log.LogInfo("Press ignored: no CameraStateManager.");
+                return;
+            }
 
             if (Active) Supervise(cam);
 
-            if (InputFieldChecker.InsideInputField) return;
-            if (cycleKey.Value.IsDown() || JoystickButtonDown(missileButton.Value)) CycleMissile(cam);
-            else if ((targetKey.Value.IsDown() || JoystickButtonDown(targetButton.Value)) && allowTargetView.Value) ViewTarget(cam);
-            else if (returnKey.Value.IsDown() && Active) Restore(cam, "return key");
+            if (InputFieldChecker.InsideInputField) { if (anyPress) Log.LogInfo("Press ignored: text field focused."); return; }
+            if (missilePress) CycleMissile(cam);
+            else if (targetPress && allowTargetView.Value) ViewTarget(cam);
+            else if (returnPress && Active) Restore(cam, "return key");
+        }
+
+        /// <summary>
+        /// Main key down this frame with its own modifiers held. Unlike KeyboardShortcut.IsDown, this does not
+        /// reject the press while any other key or joystick button is held (throttle keys, MOZA switches that
+        /// report as held buttons).
+        /// </summary>
+        static bool KeyPressed(KeyboardShortcut shortcut)
+        {
+            if (shortcut.MainKey == KeyCode.None || !UnityInput.Current.GetKeyDown(shortcut.MainKey)) return false;
+            foreach (var modifier in shortcut.Modifiers)
+                if (!UnityInput.Current.GetKey(modifier)) return false;
+            return true;
         }
 
         // ---- joystick ----
@@ -179,7 +203,7 @@ namespace Talamander.MissileCam
 
         void CycleMissile(CameraStateManager cam)
         {
-            if (!TryGetFlyingAircraft(out var aircraft)) return;
+            if (!TryGetFlyingAircraft(out var aircraft)) { Flash("no local aircraft in flight"); return; }
             var missiles = OwnMissiles(aircraft);
             int current = Active && modTarget is Missile m ? missiles.IndexOf(m) : -1;
             bool onMissile = Active && modTarget is Missile;
@@ -196,7 +220,7 @@ namespace Talamander.MissileCam
 
         void ViewTarget(CameraStateManager cam)
         {
-            if (!TryGetFlyingAircraft(out var aircraft)) return;
+            if (!TryGetFlyingAircraft(out var aircraft)) { Flash("no local aircraft in flight"); return; }
             Unit target = null;
             var list = aircraft.weaponManager != null ? aircraft.weaponManager.GetTargetList() : null;
             if (list != null)
