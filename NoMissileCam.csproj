@@ -2,10 +2,10 @@
   <!--
     Missile Cam: BepInEx 5 client plugin for Nuclear Option.
     Builds against the game's own Managed DLLs. Nothing from the game is copied into the output (Private=false).
-    GameManagedDir defaults to the client install. While /mnt/games is unavailable, a provisional type check can use
+    GameManagedDir defaults to the author's client install; override it with -p:GameManagedDir=<game>/NuclearOption_Data/Managed. A type check can also use
     the dedicated server's Managed folder (same build hash cb745d6c44f1):
       dotnet build -p:GameManagedDir=$HOME/Games/nuclear-option-server/NuclearOptionServer_Data/Managed
-    A build is not a test. See NOTES.md.
+    A build is not a test. See README.md.
   -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>

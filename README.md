@@ -1,8 +1,36 @@
 # Missile Cam (Nuclear Option, BepInEx 5)
 
-Client-only spectator camera for your own in-flight missiles and your selected target. Status: **0.1.0 installed in the Steam game by Tal on 2026-10-08; 0.2.0 built only. Neither has test evidence yet.**
+Client-only spectator camera for your own in-flight missiles and your selected target.
 
-## Controls (BepInEx config `talamander.no.missilecam.cfg`)
+**Status: test build.** It compiles against Nuclear Option 0.34.1 (build `cb745d6c44f1`), but it has not been confirmed working in a real game yet. Please report what happens.
+
+## Install (players)
+
+1. Install BepInEx 5 (Windows x64, version 5.4.23 or later 5.4.x) from the official releases page: https://github.com/BepInEx/BepInEx/releases. Extract it into the Nuclear Option game folder (the folder with `NuclearOption.exe`). Start the game once and quit, so BepInEx creates its folders.
+2. Download `NoMissileCam-<version>.zip` from this repository's Releases page.
+3. Extract the zip into the same game folder. You should get `BepInEx/plugins/NoMissileCam/NoMissileCam.dll`.
+4. Start the game. `BepInEx/LogOutput.log` should contain `Missile Cam <version> loaded.`
+
+To remove it, delete the `BepInEx/plugins/NoMissileCam` folder.
+
+Only you need it. Other players and the host do not need the mod.
+
+## Keyboard controls
+
+- `]` (right square bracket): follow your first missile in flight. Each further press follows your next missile. After the last one, the next press returns to your aircraft.
+- `[` (left square bracket): follow your primary target, only if your side has an accurate track on it. Press again to return to your aircraft.
+- `\` (backslash): return to your aircraft and the view you had before.
+
+After the followed missile hits or disappears, the camera holds for 2.5 s. Then it moves to your next missile in flight, or returns to your aircraft. Change keys and timings in `BepInEx/config/talamander.no.missilecam.cfg` (created on first start).
+
+## What to report when testing
+
+- Did `]` follow a missile, and did pressing again cycle and then return?
+- Did `[` follow a selected target?
+- What happened when the missile hit, when the target died, and when you died while watching?
+- Your `BepInEx/LogOutput.log`. Lines from `Missile Cam` explain ignored presses (for example `Press ignored: game state Editor.` or `no local aircraft in flight`).
+
+## Controls (full list)
 
 Both missile and target controls are toggles.
 
@@ -10,9 +38,9 @@ Both missile and target controls are toggles.
 - `[` or MOZA AB6 button 14 (ViewTarget / TargetButton): follows your primary target, only if your side has an accurate track on it. Pressing again returns to your aircraft.
 - `\` Return: back to your aircraft and the view you had before.
 
-Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired by joystick name (`Joystick.DeviceName`, default `AB6`), so they need no game action.
+Joystick buttons are optional and default to the MOZA AB6. With no matching joystick they do nothing. Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired by joystick name (`Joystick.DeviceName`, default `AB6`), so they need no game action.
 
-The game's own bindings on those buttons still fire. On 2026-10-08 the saved AB6 map had button 12 on Next Weapon (also on button 7) and button 14 unbound. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
+The game's own bindings on those buttons still fire. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
 
 After the followed missile hits or disappears, the camera holds for `LingerSeconds` (2.5 s), then moves to your next missile in flight (`AutoNextMissile`) or returns to your aircraft.
 
@@ -42,10 +70,7 @@ After the followed missile hits or disappears, the camera holds for `LingerSecon
 ## Build
 
 ```
-dotnet build -c Release                     # against the client install (needs /mnt/games)
-dotnet build -c Release -p:GameManagedDir=$HOME/Games/nuclear-option-server/NuclearOptionServer_Data/Managed
+dotnet build -c Release -p:GameManagedDir="<game folder>/NuclearOption_Data/Managed"
 ```
 
-The second form type-checks against the dedicated server DLLs (same build hash). It is not the shipping build. BepInEx comes from the official NuGet feed (`BepInEx.BaseLib` 5.4.21) as a compile reference only.
-
-Do not install into the Steam game, `/mnt/games/no-maptest` or `/mnt/games/no-friendtest` without coordinating first.
+The game's DLLs are compile references only and are not copied or redistributed. BepInEx comes from the official NuGet feed (`BepInEx.BaseLib` 5.4.21) as a compile reference only. The dedicated server's `NuclearOptionServer_Data/Managed` folder also works for a type check (same build hash).
