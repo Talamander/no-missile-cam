@@ -31,7 +31,7 @@ namespace Talamander.MissileCam
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.3.0";
+        public const string Version = "0.3.1";
 
         internal static ManualLogSource Log;
 
@@ -76,8 +76,8 @@ namespace Talamander.MissileCam
                 "After the linger, follow your next missile in flight instead of returning, if there is one.");
             allowTargetView = Config.Bind("Behaviour", "AllowTargetView", true,
                 "Allow the ViewTarget key at all.");
-            allowInVR = Config.Bind("Behaviour", "AllowInVR", false,
-                "Allow the missile cam when the NOVR plugin is loaded. Off by default: untested in VR.");
+            allowInVR = Config.Bind("Behaviour", "AllowInVR", true,
+                "Allow the missile cam when the NOVR plugin is loaded. On by default; VR use is still untested.");
             showLabel = Config.Bind("Display", "ShowLabel", true, "Small text label while the missile cam is active.");
             releaseGameBindings = Config.Bind("Joystick", "ReleaseGameBindings", false,
                 "Opt-in, once: remove the game's own bindings on the missile cam joystick buttons, so a press does " +

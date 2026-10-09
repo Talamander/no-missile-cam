@@ -71,7 +71,7 @@ After the followed missile hits or disappears, the camera holds for `LingerSecon
 
 - While you watch a missile, your aircraft keeps flying on your inputs. The game does the same in its own orbit view.
 - Move input (Move Longitudinal/Lateral) in the orbit view drops the followed unit in vanilla code. The plugin then returns you to your aircraft.
-- `AllowInVR` is off: the plugin does nothing if a NOVR plugin is loaded, until someone tests it in the headset.
+- `AllowInVR` is on by default: the plugin also works with NOVR loaded. VR use is untested. Following a missile moves your headset view to its orbit camera, and the on-screen label and the key binding window may only show on the desktop mirror. Set it to false to turn the missile cam off in VR.
 - The camera renders whatever is near the missile. That is the same as the vanilla free camera, but it is a view of your own weapon you do not get in vanilla while alive.
 
 ## Build
