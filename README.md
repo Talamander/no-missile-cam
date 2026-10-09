@@ -1,12 +1,18 @@
 # Missile Cam (Nuclear Option, BepInEx 5)
 
-Client-only spectator camera for your own in-flight missiles and your selected target. Status: **code written and type-checked only. Not installed, not run in the game, not tested.**
+Client-only spectator camera for your own in-flight missiles and your selected target. Status: **0.1.0 installed in the Steam game by Tal on 2026-10-08; 0.2.0 built only. Neither has test evidence yet.**
 
-## Keys (BepInEx config `talamander.no.missilecam.cfg`)
+## Controls (BepInEx config `talamander.no.missilecam.cfg`)
 
-- `]` CycleMissile: follow your next missile in flight (starts the missile cam).
-- `[` ViewTarget: follow your primary target, only if your side has an accurate track on it.
+Both missile and target controls are toggles.
+
+- `]` or MOZA AB6 button 12 (CycleMissile / MissileButton): the first press follows your first missile in flight. Each further press follows the next missile. After the last missile, the next press returns to your aircraft.
+- `[` or MOZA AB6 button 14 (ViewTarget / TargetButton): follows your primary target, only if your side has an accurate track on it. Pressing again returns to your aircraft.
 - `\` Return: back to your aircraft and the view you had before.
+
+Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired by joystick name (`Joystick.DeviceName`, default `AB6`), so they need no game action.
+
+The game's own bindings on those buttons still fire. On 2026-10-08 the saved AB6 map had button 12 on Next Weapon (also on button 7) and button 14 unbound. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
 
 After the followed missile hits or disappears, the camera holds for `LingerSeconds` (2.5 s), then moves to your next missile in flight (`AutoNextMissile`) or returns to your aircraft.
 

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -20,13 +22,16 @@ namespace Talamander.MissileCam
     /// - Target: only when the local HQ owns it or has an accurate track (FactionHQ.IsTargetPositionAccurate(t, 100)),
     ///   the same test as UnitMapIcon.Select and CameraStateManager.FollowCheck. FollowCheck still drops the view
     ///   once the track goes stale.
+    ///
+    /// Joystick buttons (default MOZA AB6 buttons 12 and 14) are read straight from Rewired, so they work without a
+    /// game action. Both buttons and their keys are toggles: pressing again cycles to the next missile or returns.
     /// </summary>
     [BepInPlugin(Guid, Name, Version)]
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
 
         internal static ManualLogSource Log;
 
@@ -39,6 +44,13 @@ namespace Talamander.MissileCam
         ConfigEntry<bool> allowTargetView;
         ConfigEntry<bool> allowInVR;
         ConfigEntry<bool> showLabel;
+        ConfigEntry<string> joystickName;
+        ConfigEntry<int> missileButton;
+        ConfigEntry<int> targetButton;
+        ConfigEntry<bool> releaseGameBindings;
+
+        Rewired.Joystick joystick;
+        float nextJoystickSearch;
 
         // Session state. Null savedState means the plugin is not driving the camera.
         CameraBaseState savedState;
@@ -53,9 +65,9 @@ namespace Talamander.MissileCam
             Log = Logger;
             pluginEnabled = Config.Bind("General", "Enabled", true, "Master switch.");
             cycleKey = Config.Bind("Keys", "CycleMissile", new KeyboardShortcut(KeyCode.RightBracket),
-                "Follow the next of your own missiles in flight. Starts the missile cam if it is off.");
+                "Toggle: follow your first missile in flight, then the next one on each press, then back to your aircraft.");
             targetKey = Config.Bind("Keys", "ViewTarget", new KeyboardShortcut(KeyCode.LeftBracket),
-                "Follow your current primary target, if your side has an accurate track on it.");
+                "Toggle: follow your primary target (only with an accurate track); press again to return to your aircraft.");
             returnKey = Config.Bind("Keys", "Return", new KeyboardShortcut(KeyCode.Backslash),
                 "Return to your aircraft and the camera view you had before.");
             lingerSeconds = Config.Bind("Behaviour", "LingerSeconds", 2.5f,
@@ -67,6 +79,15 @@ namespace Talamander.MissileCam
             allowInVR = Config.Bind("Behaviour", "AllowInVR", false,
                 "Allow the missile cam when the NOVR plugin is loaded. Off by default: untested in VR.");
             showLabel = Config.Bind("Display", "ShowLabel", true, "Small text label while the missile cam is active.");
+            joystickName = Config.Bind("Joystick", "DeviceName", "AB6",
+                "Part of the joystick name as Rewired reports it (the AB6 is \"Gudsen MOZA AB6 FFB Base\"). Empty disables joystick buttons.");
+            missileButton = Config.Bind("Joystick", "MissileButton", 12,
+                "Joystick button for the CycleMissile toggle, numbered as in MOZA Cockpit / MOZA Button Viewer (1-based). 0 disables.");
+            targetButton = Config.Bind("Joystick", "TargetButton", 14,
+                "Joystick button for the ViewTarget toggle, MOZA numbering (1-based). 0 disables.");
+            releaseGameBindings = Config.Bind("Joystick", "ReleaseGameBindings", false,
+                "Opt-in, once: remove the game's own bindings on MissileButton and TargetButton for this joystick, so a press does " +
+                "not also trigger a game action. Saves a backup XML to BepInEx/config first, then sets itself to false.");
 
             vrDetected = HasPluginLike("novr");
             SceneManager.activeSceneChanged += (_, __) => ResetState("scene changed");
@@ -97,9 +118,61 @@ namespace Talamander.MissileCam
             if (Active) Supervise(cam);
 
             if (InputFieldChecker.InsideInputField) return;
-            if (cycleKey.Value.IsDown()) CycleMissile(cam);
-            else if (targetKey.Value.IsDown() && allowTargetView.Value) ViewTarget(cam);
+            if (cycleKey.Value.IsDown() || JoystickButtonDown(missileButton.Value)) CycleMissile(cam);
+            else if ((targetKey.Value.IsDown() || JoystickButtonDown(targetButton.Value)) && allowTargetView.Value) ViewTarget(cam);
             else if (returnKey.Value.IsDown() && Active) Restore(cam, "return key");
+        }
+
+        // ---- joystick ----
+
+        bool JoystickButtonDown(int mozaNumber)
+        {
+            if (mozaNumber <= 0 || !FindJoystick()) return false;
+            int index = mozaNumber - 1; // MOZA numbering is 1-based; Rewired button indices are 0-based.
+            return index < joystick.buttonCount && joystick.GetButtonDown(index);
+        }
+
+        bool FindJoystick()
+        {
+            if (joystick != null && joystick.isConnected) return true;
+            joystick = null;
+            if (string.IsNullOrEmpty(joystickName.Value) || !Rewired.ReInput.isReady) return false;
+            if (Time.unscaledTime < nextJoystickSearch) return false;
+            nextJoystickSearch = Time.unscaledTime + 3f;
+            joystick = Rewired.ReInput.controllers.Joysticks.FirstOrDefault(j => j.name != null && j.name.Contains(joystickName.Value));
+            if (joystick == null) return false;
+            Log.LogInfo($"Joystick buttons on \"{joystick.name}\": missile {missileButton.Value}, target {targetButton.Value}.");
+            if (releaseGameBindings.Value) ReleaseGameBindings();
+            return true;
+        }
+
+        void ReleaseGameBindings()
+        {
+            try
+            {
+                var map = Rewired.ReInput.players.GetPlayer(0).controllers.maps.GetMap(Rewired.ControllerType.Joystick, joystick.id, 0, 0);
+                if (map == null) { Log.LogWarning("No game controller map for the joystick yet; will retry next start."); return; }
+                var ids = new HashSet<int>();
+                foreach (int n in new[] { missileButton.Value, targetButton.Value })
+                    if (n > 0 && n <= joystick.buttonCount) ids.Add(joystick.Buttons[n - 1].elementIdentifier.id);
+                var doomed = map.AllMaps.Where(m => m.elementType == Rewired.ControllerElementType.Button && ids.Contains(m.elementIdentifierId)).ToArray();
+                if (doomed.Length > 0)
+                {
+                    File.WriteAllText(Path.Combine(Paths.ConfigPath, "missilecam-joystick-before-release.xml"), map.ToXmlString());
+                    foreach (var m in doomed)
+                    {
+                        var action = Rewired.ReInput.mapping.GetAction(m.actionId);
+                        Log.LogInfo($"Removing game binding {m.elementIdentifierName} -> {(action != null ? action.name : m.actionId.ToString())}.");
+                        map.DeleteElementMap(m.id);
+                    }
+                    Rewired.ReInput.userDataStore.SavePlayerData(0);
+                    PlayerPrefs.Save();
+                }
+                else Log.LogInfo("No game bindings on the missile cam buttons.");
+                releaseGameBindings.Value = false;
+                Config.Save();
+            }
+            catch (System.Exception e) { Log.LogError(e); }
         }
 
         // ---- actions ----
@@ -108,9 +181,16 @@ namespace Talamander.MissileCam
         {
             if (!TryGetFlyingAircraft(out var aircraft)) return;
             var missiles = OwnMissiles(aircraft);
+            int current = Active && modTarget is Missile m ? missiles.IndexOf(m) : -1;
+            bool onMissile = Active && modTarget is Missile;
+            // Toggle: on a missile, step to the next one; after the last (or with none left), return to the aircraft.
+            if (onMissile && current + 1 >= missiles.Count && (current >= 0 || missiles.Count == 0))
+            {
+                Restore(cam, "missile toggle");
+                return;
+            }
             if (missiles.Count == 0) { Flash("no missiles in flight"); return; }
-            int current = modTarget is Missile m ? missiles.IndexOf(m) : -1;
-            var next = missiles[(current + 1) % missiles.Count];
+            var next = missiles[current + 1];
             Follow(cam, aircraft, next, $"missile {missiles.IndexOf(next) + 1}/{missiles.Count}: {UnitLabel(next)}");
         }
 
@@ -122,6 +202,8 @@ namespace Talamander.MissileCam
             if (list != null)
                 foreach (var u in list)
                     if (u != null && !u.disabled) { target = u; break; }
+            // Toggle: pressing again while on the target goes back to the aircraft.
+            if (Active && modTarget != null && !(modTarget is Missile)) { Restore(cam, "target toggle"); return; }
             if (target == null) { Flash("no target selected"); return; }
             if (!MayView(target)) { Flash("target not tracked"); return; }
             Follow(cam, aircraft, target, $"target: {UnitLabel(target)}");
