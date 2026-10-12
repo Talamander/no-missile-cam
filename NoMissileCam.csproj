@@ -11,7 +11,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>NoMissileCam</AssemblyName>
     <RootNamespace>Talamander.MissileCam</RootNamespace>
-    <Version>0.3.2</Version>
+    <Version>0.3.3</Version>
     <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>

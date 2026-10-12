@@ -23,8 +23,9 @@ fan-made and not affiliated with Shockfront Studios.
 **Status: test build.** Version 0.3.2 was tested in a single-player mission on Nuclear Option 0.34.2
 (Linux, Proton) with a default BepInEx install and no other mods: missile follow, the move to the
 next missile, target view and the key window all worked. It is not yet tested on Windows, in
-multiplayer or in VR. Version 0.3.1 and earlier stopped working right after the game started on a
-default BepInEx install; please update.
+multiplayer or in VR. Version 0.3.3 changes only the release files (a second zip for mod managers);
+the mod itself is the same as 0.3.2. Version 0.3.1 and earlier stopped working right after the game
+started on a default BepInEx install; please update.
 
 ## What it does
 
@@ -72,7 +73,9 @@ library and choose **Manage**, then **Browse local files**. It is the folder wit
    Linux, also set this Steam launch option for the game first:
    `WINEDLLOVERRIDES="winhttp=n,b" %command%`
 2. Download `NoMissileCam-<version>.zip` from
-   [Releases](https://github.com/Talamander/no-missile-cam/releases).
+   [Releases](https://github.com/Talamander/no-missile-cam/releases). (The other file there,
+   `NoMissileCam-<version>-plugins.zip`, is for mod managers. It has the same files without the
+   folders.)
 3. Unzip it into the game folder. You should now have
    `BepInEx/plugins/NoMissileCam/NoMissileCam.dll`.
 4. Start the game. The Controls menu now has a **Missile Cam Keys** button.
@@ -80,6 +83,10 @@ library and choose **Manage**, then **Browse local files**. It is the folder wit
 To update, close the game and unzip the new version over the old one.
 
 If you already use other BepInEx mods, they keep working. Missile Cam only adds its own folder.
+
+With a mod manager such as [NOMM](https://github.com/Combat787/NuclearOptionModManager), install
+Missile Cam from its mod list instead (once it is listed there). It goes into the same
+`BepInEx/plugins/NoMissileCam` folder.
 
 ## Keys
 

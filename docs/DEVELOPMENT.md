@@ -13,7 +13,17 @@ The game's DLLs are compile references only and are not copied or redistributed.
 the official NuGet feed (`BepInEx.BaseLib` 5.4.21) as a compile reference only. The dedicated
 server's `NuclearOptionServer_Data/Managed` folder also works for a type check (same build hash).
 
-To build the player zip (`dist/NoMissileCam-<version>.zip`, which unzips into the game folder):
+To build the release zips:
+
+- `dist/NoMissileCam-<version>-plugins.zip`: the DLL, README and LICENSE at the zip root, for mod
+  managers. NOMM unpacks a mod's zip into `BepInEx/plugins/<mod id>/` (the mod id is `NoMissileCam`),
+  and NOMNOM's auto-update takes the **first** asset of each new GitHub release, so this zip must be
+  uploaded first.
+- `dist/NoMissileCam-<version>.zip`: the same files under `BepInEx/plugins/NoMissileCam/`, for players
+  who unzip it into the game folder by hand. Upload it second.
+
+The script also writes `dist/SHA256SUMS` and stops if the csproj and `Plugin.cs` versions differ.
+NOMNOM needs a plain numeric tag such as `v0.3.3`.
 
 ```
 python3 scripts/package.py -p:GameManagedDir="<game folder>/NuclearOption_Data/Managed"
