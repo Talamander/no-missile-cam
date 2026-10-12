@@ -17,6 +17,9 @@ After it is merged, set the mod image with the "Update Mod Image URL" issue temp
 - `isClientOrServer` `Client`: only the player who wants the camera installs it. It sends no network
   messages.
 - `tags`: `mod`, `QoL` and `Camera`, as the other camera mods in NOMNOM use.
+- `description`: leads with what this mod adds next to other missile cameras in NOMNOM (the `[` target
+  view and in-game rebinding of keys and joystick buttons) without naming other mods. Keep the `\`
+  key escaped as `\\` in the JSON.
 - No `dependencies`: NOMM installs BepInEx 5 itself, and the plugin needs nothing else.
 - `gameVersion` `0.34.2`: the version the 0.3.2 code was tested on (0.3.3 is the same code).
 

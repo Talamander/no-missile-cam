@@ -1,7 +1,7 @@
 {
   "id": "NoMissileCam",
   "displayName": "Missile Cam",
-  "description": "Ride your own missiles. Press ] and the camera follows your missile all the way to the hit, then moves to your next one in flight. [ shows your target, \\ takes you back to the cockpit. Keys and joystick buttons can be changed in game with Ctrl+F8.",
+  "description": "Ride your own missiles, or watch your target. Press ] and the camera follows your missile all the way to the hit, then moves to your next one in flight. Press [ to watch your selected target, and \\ to go back to the cockpit. Keys and joystick buttons can be changed in game with Ctrl+F8.",
   "tags": [
     "mod",
     "QoL",
