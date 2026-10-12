@@ -1,0 +1,38 @@
+{
+  "id": "NoMissileCam",
+  "displayName": "Missile Cam",
+  "description": "Ride your own missiles. Press ] and the camera follows your missile all the way to the hit, then moves to your next one in flight. [ shows your target, \\ takes you back to the cockpit. Keys and joystick buttons can be changed in game with Ctrl+F8.",
+  "tags": [
+    "mod",
+    "QoL",
+    "Camera"
+  ],
+  "urls": [
+    {
+      "name": "info",
+      "url": "https://github.com/Talamander/no-missile-cam"
+    },
+    {
+      "name": "releases",
+      "url": "https://github.com/Talamander/no-missile-cam/releases"
+    }
+  ],
+  "authors": [
+    "Talamander"
+  ],
+  "isClientOrServer": "Client",
+  "githubOwner": "Talamander",
+  "githubRepoName": "no-missile-cam",
+  "autoUpdateArtifacts": "True",
+  "artifacts": [
+    {
+      "fileName": "NoMissileCam-0.3.3-plugins.zip",
+      "version": "0.3.3",
+      "category": "release",
+      "type": "plugin",
+      "gameVersion": "0.34.2",
+      "downloadUrl": "https://github.com/Talamander/no-missile-cam/releases/download/v0.3.3/NoMissileCam-0.3.3-plugins.zip",
+      "hash": "sha256:f160d8464641126ce271ce594fa1176267f0b72d35b2f9f5989915bfb5467cd7"
+    }
+  ]
+}
