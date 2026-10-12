@@ -20,12 +20,13 @@
 Missile Cam is a free mod for [Nuclear Option](https://store.steampowered.com/app/2168680/). It is
 fan-made and not affiliated with Shockfront Studios.
 
-**Status:** version 0.3.2 was tested in a single-player mission on Nuclear Option 0.34.2
-(Linux, Proton) with a default BepInEx install and no other mods: missile follow, the move to the
-next missile, target view and the key window all worked. It is not yet tested on Windows, in
-multiplayer or in VR. Version 0.3.3 changes only the release files (a second zip for mod managers);
-the mod itself is the same as 0.3.2. Version 0.3.1 and earlier stopped working right after the game
-started on a default BepInEx install; please update.
+**Status:** version 0.3.4 was tested in a single-player mission on Nuclear Option 0.34.2 (Linux,
+Proton) with a default BepInEx install and no other mods: missile follow, the move to the next
+missile, target view and the key window all worked, and the game's spectator key no longer moves the
+camera to other aircraft while you fly. It is not yet tested on Windows, in multiplayer or in VR.
+Version 0.3.3 and earlier let the game's spectator key (Change Spectate Faction) move the camera to
+other aircraft while you were watching a missile or your target; please update. Version 0.3.1 and
+earlier also stopped working right after the game started on a default BepInEx install.
 
 ## What it does
 
@@ -34,7 +35,8 @@ started on a default BepInEx install; please update.
 - **Every missile in the air.** Press **]** again for your next missile in flight. After the last
   one, the next press takes you back to your aircraft.
 - **Holds on the hit.** When the missile hits or is gone, the camera stays on the spot for 2.5
-  seconds. Then it moves on to your next missile, or back to your aircraft.
+  seconds (you can set 0 to 5), and you cannot move it. Then it moves on to your next missile, or
+  back to your aircraft.
 - **Looks at your target.** Press **[** to watch your selected target, if your side has a good track
   on it, the same rule the game's map uses.
 - **Your keys, your stick.** Change the keys and joystick buttons in a small window inside the game.
@@ -139,12 +141,25 @@ report anything that goes wrong.
 The camera goes straight back to your aircraft, and the game does what it normally does when you die.
 
 **Why did the camera jump back to my aircraft?**
-It does that when you move the camera yourself, click a unit on the map, or when the game loses the
-track on your target. That is the game's own camera behaviour; the mod lets go.
+It does that when you move the camera yourself, or when your side loses the track on your target.
+It also goes back if something tries to move the camera to another unit while you are flying, such
+as the game's Change Spectate Faction key.
 
 **Is it fair?**
-The missile camera shows what is around your own missile, like the game's free camera does, but while
-you are still flying. The target view uses the same rule as clicking the target on the map.
+The mod should never show you a unit you could not see in the game without it.
+
+- The missile camera follows only your own missiles.
+- The target view opens only when your side has an accurate track on the target, the same check
+  the game's map uses before it lets you follow a unit
+  (`FactionHQ.IsTargetPositionAccurate(unit, 100f)`). When the track goes stale, the game drops the
+  view and the mod takes you back to your aircraft.
+- The mod's camera cannot be used to spectate other units while you fly. The game's own spectator
+  key (Change Spectate Faction) does nothing while the mod has the camera, and any other jump to a
+  unit that is not yours sends the camera back to your aircraft.
+- During the hold after a hit, the camera cannot be moved, and the hold is at most 5 seconds.
+
+The missile camera still shows what is around your own missile while you are flying, which the game
+alone does not.
 
 **Something does not work.**
 Open an issue on [GitHub](https://github.com/Talamander/no-missile-cam/issues). Say what you did and

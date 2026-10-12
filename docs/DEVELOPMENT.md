@@ -23,7 +23,7 @@ To build the release zips:
   who unzip it into the game folder by hand. Upload it second.
 
 The script also writes `dist/SHA256SUMS` and stops if the csproj and `Plugin.cs` versions differ.
-NOMNOM needs a plain numeric tag such as `v0.3.3`.
+NOMNOM needs a plain numeric tag such as `v0.3.4`.
 
 ```
 python3 scripts/package.py -p:GameManagedDir="<game folder>/NuclearOption_Data/Managed"
@@ -45,7 +45,7 @@ in-game key window (Ctrl+F8, or **Missile Cam Keys** in the Controls menu) write
 | Joystick | `ViewTargetDevice` / `ViewTargetButton` | `AB6` / 14 | Joystick button for `ViewTarget`. |
 | Joystick | `ReturnDevice` / `ReturnButton` | none | Joystick button for `Return`. |
 | Joystick | `ReleaseGameBindings` | false | One-shot: removes the game's own bindings on the mod's buttons, then sets itself back to false. |
-| Behaviour | `LingerSeconds` | 2.5 | How long the camera holds after the followed missile is gone. |
+| Behaviour | `LingerSeconds` | 2.5 | How long the camera holds after the followed missile is gone, 0 to 5 seconds. Camera move input is off during the hold. |
 | Behaviour | `AutoNextMissile` | true | After the hold, move to your next missile in flight. |
 | Behaviour | `AllowTargetView` | true | Allow the target view. |
 | Behaviour | `AllowInVR` | true | Allow the missile cam while a VR plugin is loaded. |
@@ -82,8 +82,26 @@ the test copy reports Early Access 0.34.2.
 - Death while watching a missile: the game plays its death sound and opens the map only if the
   camera was on your aircraft when it died. The plugin returns to the aircraft at once and repeats
   that handling.
-- Any other camera change (map click, Change Spectate Faction, back to own aircraft) is treated as
-  you taking over: the plugin stops driving.
+- No spectating while you fly. In the game's orbit camera, `CameraOrbitState.Inputs` lets the
+  **Change Spectate Faction** key jump to the nearest tracked aircraft of another faction whenever the
+  followed unit is not your own aircraft (`!GameManager.IsLocalAircraft(cam.followingUnit)`). Orbiting
+  your own aircraft keeps that off, but following a missile or a target would turn it on. Since
+  0.3.4, while the plugin has the camera:
+  - a Harmony prefix makes `CameraOrbitState.TryGetNearestEnemyAircraft` return nothing when it is
+    called from `Inputs` (the only call there is the hop, after the key went down), so the key does
+    nothing. The "Spectate Next Aircraft" look-at in `CameraMotion`, which only turns the camera, is
+    left alone;
+  - every frame, if the camera follows anything other than the plugin's unit, your own missiles or
+    your own aircraft, the plugin sends it back to your aircraft (the same path as the Return key).
+  A flying player cannot follow other units in the unmodded game: `UnitMapIcon.Select` only selects
+  a target while your aircraft is alive, and `GameplayUI.SwitchSpectatedAircraft` only runs without
+  one.
+- Back on your own aircraft through the game's controls: the plugin stops driving. Death and
+  respawn go through the aircraft check first, so the game's own death flow runs as before.
+- The hold after an impact runs in the game's free camera. The plugin sets
+  `CameraStateManager.allowInputs = false` for the hold (the free and controlled states only move on
+  input when it is true) and restores the old value afterwards. If the camera still moves more than
+  50 m from where the hold started, the hold ends early. `LingerSeconds` is limited to 0 to 5.
 - The game's first scene load destroys the BepInEx manager object, and every plugin on it, unless the
   object is hidden. BepInEx's `HideManagerGameObject` option does that; since 0.3.2 the plugin also
   sets `HideFlags.HideAndDontSave` on its own object in `Awake`, as Nuclear Replay does. Before
@@ -91,8 +109,10 @@ the test copy reports Early Access 0.34.2.
 
 ## Client and server
 
-- Only the player who wants the camera installs it. It sends no network messages. Its only Harmony
-  patch is a postfix on `ControlsMenu.Start` that adds the **Missile Cam Keys** button. No camera
+- Only the player who wants the camera installs it. It sends no network messages. Its Harmony
+  patches are a postfix on `ControlsMenu.Start` that adds the **Missile Cam Keys** button, and the
+  spectator hop guard on `CameraOrbitState.Inputs` and `CameraOrbitState.TryGetNearestEnemyAircraft`
+  (active only while the plugin has the camera). No camera
   code in the game sends a Cmd, Rpc or SyncVar (`CameraStateManager`, `Camera*State`,
   `UnitMapIcon`).
 - Mirage visibility: Assembly-CSharp has no `NetworkVisibility` subclass, so Mirage uses its default
@@ -112,6 +132,19 @@ single-player mission *05. Furball*. A separate test-only plugin flew the aircra
 missiles, pressed the keys and saved frames; it is not part of this repository. The log showed the
 mod alive at mission start, `[` following the target, `]` following a missile and then the next
 one, and Ctrl+F8 opening the key window.
+
+The 0.3.4 test used the same setup. The test plugin also pressed the game's Change Spectate Faction
+action (injected through Rewired) while the mod followed the target and while it followed a missile,
+called `CameraStateManager.SetFollowingUnit` on another aircraft directly, and held the free camera's
+move input during the hold after a hit. Results, against 0.3.3 in the same mission:
+
+- Change Spectate Faction while following the target or a missile: 0.3.3 moved the camera to another
+  faction's aircraft and let go; 0.3.4 kept the camera on the same unit and logged
+  `Change Spectate Faction ignored`.
+- Direct switch to another aircraft: 0.3.3 stayed on that aircraft; 0.3.4 returned the camera to
+  the player's aircraft.
+- Hold after a hit with move input held: the 0.3.3 camera flew about 470 m away; the 0.3.4 camera
+  moved 0.0 m, and a configured `LingerSeconds = 30` was clamped to 5.
 
 What to include in a bug report:
 

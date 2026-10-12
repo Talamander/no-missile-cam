@@ -4,6 +4,7 @@ using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using HarmonyLib;
 using NuclearOption.MissionEditorScripts;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,14 +16,19 @@ namespace Talamander.MissileCam
     ///
     /// It reuses the game's own spectator pathway: CameraStateManager.SetFollowingUnit(unit), the same call the
     /// map uses when you click a unit icon (UnitMapIcon.Select). The game's orbit state already supports a Missile
-    /// as the followed unit. The plugin sends nothing over the network. Its only Harmony patch is a postfix on
-    /// ControlsMenu.Start that adds the Missile Cam Keys button to the game's Controls menu.
+    /// as the followed unit. The plugin sends nothing over the network. Its Harmony patches: a postfix on
+    /// ControlsMenu.Start that adds the Missile Cam Keys button to the game's Controls menu, and the spectator hop
+    /// guard on CameraOrbitState (see SpectateGuard).
     ///
     /// Visibility rules copied from the game:
     /// - Missiles: only missiles whose ownerID is the local aircraft (same faction, always tracked).
     /// - Target: only when the local HQ owns it or has an accurate track (FactionHQ.IsTargetPositionAccurate(t, 100)),
     ///   the same test as UnitMapIcon.Select and CameraStateManager.FollowCheck. FollowCheck still drops the view
     ///   once the track goes stale.
+    /// - No spectating while you fly: while the plugin owns the camera, the game's spectator hop ("Change Spectate
+    ///   Faction") is blocked, and any other switch to a unit that is not yours sends the camera back to your aircraft.
+    /// - The hold after an impact is capped at MaxLingerSeconds, camera move input is off during it, and the hold ends
+    ///   early if the camera moves away from the impact point anyway.
     ///
     /// Joystick buttons (default MOZA AB6 buttons 12 and 14) are read straight from Rewired, so they work without a
     /// game action. Both buttons and their keys are toggles: pressing again cycles to the next missile or returns.
@@ -32,9 +38,14 @@ namespace Talamander.MissileCam
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.3.3";
+        public const string Version = "0.3.4";
 
         internal static ManualLogSource Log;
+
+        /// <summary>Upper bound for LingerSeconds.</summary>
+        public const float MaxLingerSeconds = 5f;
+        /// <summary>The hold after an impact ends early if the camera moves further than this from where it started.</summary>
+        const float MaxLingerDrift = 50f;
 
         ConfigEntry<bool> pluginEnabled;
         Binding missileBinding;
@@ -55,6 +66,9 @@ namespace Talamander.MissileCam
         Aircraft savedAircraft;
         Unit modTarget;          // the unit the plugin asked the camera to follow
         float lostAt = -1f;      // Time.unscaledTime when modTarget was lost (impact, despawn, track loss)
+        GlobalPosition lingerFrom; // camera position when the hold started
+        bool inputsLocked;       // the plugin set CameraStateManager.allowInputs = false for the hold
+        bool savedAllowInputs;
         string label = "";
         bool vrDetected;
 
@@ -75,8 +89,9 @@ namespace Talamander.MissileCam
             bindings = new[] { missileBinding, targetBinding, returnBinding };
             settingsKey = Config.Bind("Keys", "OpenSettings", new KeyboardShortcut(KeyCode.F8, KeyCode.LeftControl),
                 "Open the Missile Cam key binding window. The window also opens from Missile Cam Keys in the game's Controls menu.");
-            lingerSeconds = Config.Bind("Behaviour", "LingerSeconds", 2.5f,
-                "After the followed missile hits or disappears, hold the camera where it is for this long.");
+            lingerSeconds = Config.Bind("Behaviour", "LingerSeconds", 2.5f, new ConfigDescription(
+                "After the followed missile hits or disappears, hold the camera where it is for this long (0 to 5 seconds). " +
+                "Camera move input is off during the hold.", new AcceptableValueRange<float>(0f, MaxLingerSeconds)));
             autoNextMissile = Config.Bind("Behaviour", "AutoNextMissile", true,
                 "After the linger, follow your next missile in flight instead of returning, if there is one.");
             allowTargetView = Config.Bind("Behaviour", "AllowTargetView", true,
@@ -89,9 +104,14 @@ namespace Talamander.MissileCam
                 "not also trigger a game action. Saves a backup XML to BepInEx/config first, then sets itself to false.");
 
             settings = new SettingsWindow(Config, bindings);
+            try
+            {
+                SpectateGuard.Install(new Harmony(Guid + ".spectate"), () => Active, OnSpectateHopBlocked);
+            }
+            catch (System.Exception e) { Log.LogError($"Spectator hop guard failed to install: {e}"); }
             vrDetected = HasPluginLike("novr");
             SceneManager.activeSceneChanged += (_, __) => ResetState("scene changed");
-            Log.LogInfo($"{Name} {Version} loaded. VR plugin detected: {vrDetected}.");
+            Log.LogInfo($"{Name} {Version} loaded. VR plugin detected: {vrDetected}. Spectator hop guard: {(SpectateGuard.Installed ? "on" : "OFF")}.");
         }
 
         static bool HasPluginLike(string fragment)
@@ -212,6 +232,7 @@ namespace Talamander.MissileCam
                 savedState = cam.currentState;
                 savedAircraft = aircraft;
             }
+            UnlockMoveInputs();
             modTarget = unit;
             lostAt = -1f;
             label = text;
@@ -246,6 +267,7 @@ namespace Talamander.MissileCam
         void ResetState(string why)
         {
             if (Active) Log.LogInfo($"Missile cam off ({why}).");
+            UnlockMoveInputs();
             savedState = null;
             savedAircraft = null;
             modTarget = null;
@@ -270,9 +292,28 @@ namespace Talamander.MissileCam
 
             if (followed != null && !ours)
             {
-                // The player or the game moved the camera somewhere else (map click, Change Spectate Faction,
-                // back to own aircraft). Step aside; do not fight the game.
-                ResetState(followed == savedAircraft ? "camera returned to aircraft" : "camera taken over");
+                if (followed == savedAircraft)
+                {
+                    // Back on your own aircraft (the game's own controls can do that): step aside.
+                    ResetState("camera returned to aircraft");
+                    return;
+                }
+                if (followed is Missile own && !own.disabled && own.ownerID == savedAircraft.persistentID)
+                {
+                    // Another of your own missiles: keep driving.
+                    UnlockMoveInputs();
+                    modTarget = own;
+                    lostAt = -1f;
+                    label = $"missile: {UnitLabel(own)}";
+                    Log.LogInfo($"Camera moved to your own missile {UnitLabel(own)}; still following.");
+                    return;
+                }
+                // Anything else while your aircraft flies (the game's spectator hop, or any other path) is spectating
+                // a unit you could not follow in the unmodded game. Send the camera home instead of letting go.
+                Log.LogWarning($"Camera moved to {UnitLabel(followed)} while you are flying. Missile Cam does not allow " +
+                               "spectating other units; back to your aircraft.");
+                Restore(cam, "spectator hop blocked");
+                Flash("spectating is off while you fly", log: false);
                 return;
             }
 
@@ -285,11 +326,17 @@ namespace Talamander.MissileCam
             }
 
             // The followed unit hit, detonated or despawned. The game's Cam_OnFollowingUnitDisabled has already
-            // switched to the free state at the last position. Linger there, then move on.
+            // switched to the free state at the last position. Hold there, then move on.
             if (followed == null || targetLost)
             {
-                if (lostAt < 0f) { lostAt = Time.unscaledTime; label += " (lost)"; }
-                if (Time.unscaledTime - lostAt < lingerSeconds.Value) return;
+                var here = cam.transform.GlobalPosition();
+                if (lostAt < 0f) { lostAt = Time.unscaledTime; lingerFrom = here; label += " (lost)"; }
+                // The free camera must not fly away from the impact point: move input off for the hold.
+                LockMoveInputs(cam);
+                float hold = Mathf.Clamp(lingerSeconds.Value, 0f, MaxLingerSeconds);
+                bool drifted = FastMath.Distance(here, lingerFrom) > MaxLingerDrift;
+                if (drifted) Log.LogInfo("Camera moved away from the impact point during the hold; ending the hold.");
+                else if (Time.unscaledTime - lostAt < hold) return;
                 if (autoNextMissile.Value)
                 {
                     var missiles = OwnMissiles(savedAircraft);
@@ -301,6 +348,30 @@ namespace Talamander.MissileCam
                 }
                 Restore(cam, "followed unit gone");
             }
+        }
+
+        void LockMoveInputs(CameraStateManager cam)
+        {
+            if (!inputsLocked)
+            {
+                savedAllowInputs = cam.allowInputs;
+                inputsLocked = true;
+            }
+            cam.allowInputs = false;
+        }
+
+        void UnlockMoveInputs()
+        {
+            if (!inputsLocked) return;
+            inputsLocked = false;
+            var cam = SceneSingleton<CameraStateManager>.i;
+            if (cam != null) cam.allowInputs = savedAllowInputs;
+        }
+
+        void OnSpectateHopBlocked()
+        {
+            Log.LogInfo("Change Spectate Faction ignored: Missile Cam has the camera and your aircraft is flying.");
+            Flash("spectating is off while you fly", log: false);
         }
 
         // ---- helpers ----
@@ -339,14 +410,14 @@ namespace Talamander.MissileCam
 
         string flash = "";
         float flashUntil;
-        void Flash(string text) { flash = text; flashUntil = Time.unscaledTime + 1.5f; Log.LogInfo(text); }
+        void Flash(string text, bool log = true) { flash = text; flashUntil = Time.unscaledTime + 1.5f; if (log) Log.LogInfo(text); }
 
         GUIStyle style;
         void OnGUI()
         {
             settings.OnGUI();
             if (!showLabel.Value) return;
-            string text = Active ? "MISSILE CAM  " + label : (Time.unscaledTime < flashUntil ? "MISSILE CAM  " + flash : null);
+            string text = Time.unscaledTime < flashUntil ? "MISSILE CAM  " + flash : (Active ? "MISSILE CAM  " + label : null);
             if (text == null) return;
             if (style == null) style = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
             var rect = new Rect(24, Screen.height - 64, Screen.width - 48, 28);
