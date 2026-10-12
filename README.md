@@ -1,83 +1,171 @@
-# Missile Cam (Nuclear Option, BepInEx 5)
+<p align="center">
+  <img src="docs/media/cover.jpg" alt="A missile flies away from the camera over green hills, booster burning, with the title Missile Cam" width="100%">
+</p>
 
-Client-only spectator camera for your own in-flight missiles and your selected target.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/logo-dark.png">
+    <img src="docs/media/logo-light.png" alt="Missile Cam" width="420">
+  </picture>
+</p>
 
-**Status: test build.** Version 0.3.2 was tested in a single-player mission on Nuclear Option 0.34.2 (Linux, Proton) with a default BepInEx install and no other mods: missile follow, the move to the next missile, target view and the key window all worked. It is not yet tested on Windows, in multiplayer or in VR. Version 0.3.1 and earlier stopped working right after the game started on a default BepInEx install; please update.
+<p align="center">
+  <b>Ride your own missiles in Nuclear Option. Press one key and the camera follows the missile all the way to the hit.</b>
+</p>
 
-## Install (players)
+<p align="center">
+  <img src="docs/media/demo.gif" alt="Cockpit view, then the camera follows a missile from launch over the hills until it hits an enemy aircraft in a fireball" width="960">
+</p>
 
-1. Install BepInEx 5 (Windows x64, version 5.4.23 or later 5.4.x) from the official releases page: https://github.com/BepInEx/BepInEx/releases. Extract it into the Nuclear Option game folder (the folder with `NuclearOption.exe`). Start the game once and quit, so BepInEx creates its folders.
-2. Download `NoMissileCam-<version>.zip` from this repository's Releases page.
-3. Extract the zip into the same game folder. You should get `BepInEx/plugins/NoMissileCam/NoMissileCam.dll`.
-4. Start the game. `BepInEx/LogOutput.log` should contain `Missile Cam <version> loaded.`
+Missile Cam is a free mod for [Nuclear Option](https://store.steampowered.com/app/2168680/). It is
+fan-made and not affiliated with Shockfront Studios.
 
-To remove it, delete the `BepInEx/plugins/NoMissileCam` folder.
+**Status: test build.** Version 0.3.2 was tested in a single-player mission on Nuclear Option 0.34.2
+(Linux, Proton) with a default BepInEx install and no other mods: missile follow, the move to the
+next missile, target view and the key window all worked. It is not yet tested on Windows, in
+multiplayer or in VR. Version 0.3.1 and earlier stopped working right after the game started on a
+default BepInEx install; please update.
 
-Only you need it. Other players and the host do not need the mod.
+## What it does
 
-## Keyboard controls
+- **Follows your missile.** Fire, press **]**, and the camera rides behind your missile until it hits
+  or is gone.
+- **Every missile in the air.** Press **]** again for your next missile in flight. After the last
+  one, the next press takes you back to your aircraft.
+- **Holds on the hit.** When the missile hits or is gone, the camera stays on the spot for 2.5
+  seconds. Then it moves on to your next missile, or back to your aircraft.
+- **Looks at your target.** Press **[** to watch your selected target, if your side has a good track
+  on it, the same rule the game's map uses.
+- **Your keys, your stick.** Change the keys and joystick buttons in a small window inside the game.
+- **Only for you.** Nobody else needs the mod, and it sends nothing over the network.
 
-- `]` (right square bracket): follow your first missile in flight. Each further press follows your next missile. After the last one, the next press returns to your aircraft.
-- `[` (left square bracket): follow your primary target, only if your side has an accurate track on it. Press again to return to your aircraft.
-- `\` (backslash): return to your aircraft and the view you had before.
+Your aircraft keeps flying on your controls while you watch, just as it does in the game's own
+orbit view.
 
-After the followed missile hits or disappears, the camera holds for 2.5 s. Then it moves to your next missile in flight, or returns to your aircraft.
+## Gallery
 
-## Change the keys in game
+Real game footage from the 0.3.2 test runs, colour graded. Nothing is added to the pictures except the
+title on the cover.
 
-Open the game's **Controls** menu and click **Missile Cam Keys** (added next to Edit Bindings). You can also press `Ctrl+F8` anywhere. Click a binding, then press the new key or joystick button; Escape cancels and **clear** removes a binding. Each action can have one keyboard key (with Shift/Ctrl/Alt if you hold them) and one joystick button. Changes save at once.
+| | |
+|---|---|
+| <img src="docs/media/game-cockpit.jpg" alt="Cockpit view over hills, a moment before launch"> | <img src="docs/media/game-target.jpg" alt="Camera behind an enemy CI-22 Cricket flying low over the plain"> |
+| The normal cockpit view, a moment before launch. | Press **[** to watch your target, here a CI-22 Cricket. |
+| <img src="docs/media/game-launch.jpg" alt="Camera behind a missile, its booster flame filling the lower half of the picture"> | <img src="docs/media/game-ride.jpg" alt="Camera behind a missile flying low past a power pylon"> |
+| Press **]** after launch and the camera rides behind the missile. | It stays with the missile all the way in. |
+| <img src="docs/media/game-closing.jpg" alt="The missile closing on the enemy aircraft, which fires flares"> | <img src="docs/media/game-hit.jpg" alt="A large fireball with burning debris where the missile hit the aircraft"> |
+| Closing in. The target fires flares. | The hit. |
+| <img src="docs/media/game-hold.jpg" alt="Fire and smoke above a field where a missile came down"> | <img src="docs/media/game-next.jpg" alt="Camera behind a second missile over the plain"> |
+| The camera holds on the spot for 2.5 seconds. | Then it moves to your next missile in flight. |
+| <img src="docs/media/game-keys-window.jpg" alt="The Missile Cam controls window over the cockpit, with keys and joystick buttons for each action"> | <img src="docs/media/game-controls-menu.jpg" alt="The game's Controls settings page with a Missile Cam Keys button"> |
+| **Ctrl+F8** opens the key window, in flight or in the menus. | Or click **Missile Cam Keys** in the game's Controls menu. |
 
-Everything is also in `BepInEx/config/talamander.no.missilecam.cfg` (created on first start), including timings. BepInEx ConfigurationManager also shows these settings if you have it installed.
+## Install
 
-## What to report when testing
+You need Nuclear Option from Steam. To find the game folder, right-click Nuclear Option in your Steam
+library and choose **Manage**, then **Browse local files**. It is the folder with
+`NuclearOption.exe`.
 
-- Did `]` follow a missile, and did pressing again cycle and then return?
-- Did `[` follow a selected target?
-- What happened when the missile hit, when the target died, and when you died while watching?
-- Your `BepInEx/LogOutput.log`. Lines from `Missile Cam` explain ignored presses (for example `Press ignored: game state Editor.` or `no local aircraft in flight`).
+1. Install [BepInEx 5](https://github.com/BepInEx/BepInEx/releases) (the x64 version for Windows,
+   5.4.23 or a later 5.4) into the game folder, if it is not there yet. BepInEx is the mod loader
+   most Nuclear Option mods use. Start the game once and quit, so BepInEx makes its folders. On
+   Linux, also set this Steam launch option for the game first:
+   `WINEDLLOVERRIDES="winhttp=n,b" %command%`
+2. Download `NoMissileCam-<version>.zip` from
+   [Releases](https://github.com/Talamander/no-missile-cam/releases).
+3. Unzip it into the game folder. You should now have
+   `BepInEx/plugins/NoMissileCam/NoMissileCam.dll`.
+4. Start the game. The Controls menu now has a **Missile Cam Keys** button.
 
-## Controls (full list)
+To update, close the game and unzip the new version over the old one.
 
-Both missile and target controls are toggles.
+If you already use other BepInEx mods, they keep working. Missile Cam only adds its own folder.
 
-- `]` or MOZA AB6 button 12 (`CycleMissile`, `CycleMissileDevice` / `CycleMissileButton`): the first press follows your first missile in flight. Each further press follows the next missile. After the last missile, the next press returns to your aircraft.
-- `[` or MOZA AB6 button 14 (`ViewTarget`, `ViewTargetDevice` / `ViewTargetButton`): follows your primary target, only if your side has an accurate track on it. Pressing again returns to your aircraft.
-- `\` (`Return`, `ReturnDevice` / `ReturnButton`, no joystick button by default): back to your aircraft and the view you had before.
-- `Ctrl+F8` (`OpenSettings`): the key binding window.
+## Keys
 
-Joystick buttons are optional and default to the MOZA AB6. With no matching joystick they do nothing. Joystick buttons use the MOZA Cockpit / MOZA Button Viewer numbering (1-based). The plugin reads them straight from Rewired, matching part of the joystick name (`...Device`, default `AB6`), so they need no game action. Capturing a button in the binding window stores that joystick's full name.
+| Key | What it does |
+|---|---|
+| ] | Follow your first missile in flight. Press again for the next one. After the last, back to your aircraft. |
+| [ | Follow your selected target, if your side has a good track on it. Press again to go back. |
+| \ | Back to your aircraft and the view you had before. |
+| Ctrl+F8 | Open the key window. |
 
-The game's own bindings on those buttons still fire. To free a button, clear it in the game's Controls menu, or set `ReleaseGameBindings = true` once. That option writes `BepInEx/config/missilecam-joystick-<id>-before-release.xml`, removes the game bindings on the two buttons, saves, and sets itself back to false.
+The missile and target keys also have joystick buttons, set by default for the MOZA AB6 (buttons 12
+and 14). With any other stick they do nothing until you set your own.
 
-After the followed missile hits or disappears, the camera holds for `LingerSeconds` (2.5 s), then moves to your next missile in flight (`AutoNextMissile`) or returns to your aircraft.
+### Change the keys
 
-## How it works (code evidence, decompiled 0.34.1 client, build `cb745d6c44f1`)
+Open the game's **Controls** menu and click **Missile Cam Keys**, or press **Ctrl+F8** anywhere.
+Click a binding, then press the new key or joystick button. Escape cancels, and **clear** removes a
+binding. Each action can have one key (with Shift, Ctrl or Alt if you hold them) and one joystick
+button. Changes save at once.
 
-- It calls `CameraStateManager.SetFollowingUnit(unit)`. The map uses the same call when you click a unit icon while dead or spectating (`UnitMapIcon.Select`). The orbit camera already handles a `Missile` as the followed unit, and even looks at the missile's target (`CameraOrbitState.LookingAtTarget`).
-- Own missiles come from `UnitRegistry.allUnits`, filtered by `Missile.ownerID == localAircraft.persistentID`. Missiles register there on every client (`Missile.StartMissile` → `RegisterUnit`) and leave it when disabled.
-- Target view uses the game's own rule (`FactionHQ.IsTargetPositionAccurate(target, 100f)`), the same check as the map click and `CameraStateManager.FollowCheck`. FollowCheck still drops the view if the track goes stale; the plugin then returns you to your aircraft.
-- Restore: `SetFollowingUnit(aircraft)`, then `SwitchState(savedState)`. Never switches to the cockpit state while following a missile, because `CameraCockpitState.EnterState` casts the followed unit to `Aircraft`.
-- Death while watching a missile: the game plays its death sound and opens the map only if the camera was on your aircraft when it died. The plugin returns to the aircraft at once and repeats that handling.
-- Any other camera change (map click, Change Spectate Faction, back to own aircraft) is treated as you taking over: the plugin stops driving.
+If a joystick button also does something in the game, both happen. To stop that, clear the game's
+own binding on that button in the Controls menu.
 
-## Client/server requirements
+All settings, including how long the camera holds after a hit, are in
+`BepInEx/config/talamander.no.missilecam.cfg` in the game folder. The list is in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#settings).
 
-- Only the player who wants the camera installs it. No network messages. Its only Harmony patch is a postfix on `ControlsMenu.Start` that adds the Missile Cam Keys button. No camera code in the game sends a Cmd, Rpc or SyncVar (`CameraStateManager`, `Camera*State`, `UnitMapIcon`).
-- Mirage visibility: Assembly-CSharp has no `NetworkVisibility` subclass, so Mirage uses its default `AlwaysVisible` (every scene-ready player observes every object). Missiles therefore exist on every client. This is from code; no packet capture was done.
-- No server setting controls spectating or the free camera (checked `MissionSettings`, `DedicatedServerConfig`, `HostOptions`). There is no anti-cheat in the assembly. `ModdedServer` is only a lobby label the host sets.
-- Unknown until a real test: whether a host or other players can notice the mod in any way. Nothing in the code suggests it.
+## Questions and limits
 
-## Limits and risks
+**Do the other players need the mod?**
+No. Only you need it. Other players and the host do not.
 
-- While you watch a missile, your aircraft keeps flying on your inputs. The game does the same in its own orbit view.
-- Move input (Move Longitudinal/Lateral) in the orbit view drops the followed unit in vanilla code. The plugin then returns you to your aircraft.
-- `AllowInVR` is on by default: the plugin also works with NOVR loaded. VR use is untested. Following a missile moves your headset view to its orbit camera, and the on-screen label and the key binding window may only show on the desktop mirror. Set it to false to turn the missile cam off in VR.
-- The camera renders whatever is near the missile. That is the same as the vanilla free camera, but it is a view of your own weapon you do not get in vanilla while alive.
+**Does it work in multiplayer, and on any server?**
+It should. The mod only moves your own camera and sends nothing over the network, and the game has no
+server setting that controls it. It has not been tested in multiplayer yet, so please report how it
+goes.
 
-## Build
+**Does it work in VR?**
+It is turned on in VR, but it has not been tested there. Following a missile moves your headset view
+to the missile camera, and the label and the key window may only show on the desktop screen. To turn
+it off in VR, set `AllowInVR = false` in the settings file.
 
-```
-dotnet build -c Release -p:GameManagedDir="<game folder>/NuclearOption_Data/Managed"
-```
+**Does it work on Windows?**
+It is built for Windows and Linux. So far it has been tested on Linux (Steam with Proton). Please
+report anything that goes wrong.
 
-The game's DLLs are compile references only and are not copied or redistributed. BepInEx comes from the official NuGet feed (`BepInEx.BaseLib` 5.4.21) as a compile reference only. The dedicated server's `NuclearOptionServer_Data/Managed` folder also works for a type check (same build hash).
+**What happens if I get shot down while watching?**
+The camera goes straight back to your aircraft, and the game does what it normally does when you die.
+
+**Why did the camera jump back to my aircraft?**
+It does that when you move the camera yourself, click a unit on the map, or when the game loses the
+track on your target. That is the game's own camera behaviour; the mod lets go.
+
+**Is it fair?**
+The missile camera shows what is around your own missile, like the game's free camera does, but while
+you are still flying. The target view uses the same rule as clicking the target on the map.
+
+**Something does not work.**
+Open an issue on [GitHub](https://github.com/Talamander/no-missile-cam/issues). Say what you did and
+what went wrong, and attach the mod log: `BepInEx/LogOutput.log` in the game folder. Attach it right
+after the problem, before you start the game again, because the game rewrites it on every start.
+
+**How do I uninstall it?**
+Close the game first.
+
+- The mod: delete `BepInEx/plugins/NoMissileCam` in the game folder.
+- Its settings: delete `BepInEx/config/talamander.no.missilecam.cfg`.
+- The mod loader: if no other mod uses BepInEx, also delete `BepInEx`, `winhttp.dll`,
+  `doorstop_config.ini`, `.doorstop_version` and `changelog.txt` from the game folder.
+
+## More Nuclear Option mods
+
+- [Nuclear Replay](https://github.com/Talamander/nuclear-replay): record your matches and watch them
+  back from any angle, then clip the best moments.
+- [Nuke Aftermath](https://github.com/Talamander/no-nuke-aftermath): after a nuclear strike, the
+  ground stays burnt and the forest lies flat.
+
+## Credits and license
+
+Made by Talamander. Missile Cam is a fan-made mod. It is not made, supported or endorsed by
+Shockfront Studios, the makers of Nuclear Option.
+
+Missile Cam is released under the [MIT license](LICENSE). BepInEx, which it needs but does not
+include, keeps its own license.
+
+## For developers
+
+Building, all settings, how the mod works and what it touches in the game are in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
