@@ -4,7 +4,7 @@
 NOMM (Nuclear Option Mod Manager) installs mods from. It follows NOMNOM's `SCHEMA.md` and passes its
 `ValidationSchema.json` and the content checks of `Validate-JsonContent.ps1` (file name equals `id`,
 id not taken, https URLs, archive file names, numeric versions). Submitted for 0.3.3 on 2026-10-12 as
-KopterBuzz/NOMNOM pull request "Add Missile Cam" (see the PR link in the commit that adds this file).
+[KopterBuzz/NOMNOM#434](https://github.com/KopterBuzz/NOMNOM/pull/434).
 After it is merged, set the mod image with the "Update Mod Image URL" issue template
 (`HOWTO_UPDATE_MODIMAGE.md` in NOMNOM; 512x512 at most), using
 `https://raw.githubusercontent.com/Talamander/no-missile-cam/master/docs/media/icon-512.png`.
