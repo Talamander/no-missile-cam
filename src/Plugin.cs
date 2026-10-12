@@ -15,7 +15,8 @@ namespace Talamander.MissileCam
     ///
     /// It reuses the game's own spectator pathway: CameraStateManager.SetFollowingUnit(unit), the same call the
     /// map uses when you click a unit icon (UnitMapIcon.Select). The game's orbit state already supports a Missile
-    /// as the followed unit. The plugin sends nothing over the network and patches no game method.
+    /// as the followed unit. The plugin sends nothing over the network. Its only Harmony patch is a postfix on
+    /// ControlsMenu.Start that adds the Missile Cam Keys button to the game's Controls menu.
     ///
     /// Visibility rules copied from the game:
     /// - Missiles: only missiles whose ownerID is the local aircraft (same faction, always tracked).
@@ -31,7 +32,7 @@ namespace Talamander.MissileCam
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.3.1";
+        public const string Version = "0.3.2";
 
         internal static ManualLogSource Log;
 
@@ -60,6 +61,10 @@ namespace Talamander.MissileCam
         void Awake()
         {
             Log = Logger;
+            // Nuclear Option's first scene load destroys the BepInEx manager object (and this plugin with it) unless
+            // the object is hidden, as BepInEx's HideManagerGameObject option does. Without this, a default BepInEx
+            // install loads the plugin and then loses it before the main menu, so no key does anything.
+            if ((gameObject.hideFlags & HideFlags.DontSave) == 0) gameObject.hideFlags |= HideFlags.HideAndDontSave;
             pluginEnabled = Config.Bind("General", "Enabled", true, "Master switch.");
             missileBinding = new Binding(Config, "Follow / cycle missile", "CycleMissile", KeyCode.RightBracket,
                 "Toggle: follow your first missile in flight, then the next one on each press, then back to your aircraft.", "AB6", 12);

@@ -2,7 +2,7 @@
 
 Client-only spectator camera for your own in-flight missiles and your selected target.
 
-**Status: test build.** It compiles against Nuclear Option 0.34.1 (build `cb745d6c44f1`), but it has not been confirmed working in a real game yet. Please report what happens.
+**Status: test build.** Version 0.3.2 was tested in a single-player mission on Nuclear Option 0.34.2 (Linux, Proton) with a default BepInEx install and no other mods: missile follow, the move to the next missile, target view and the key window all worked. It is not yet tested on Windows, in multiplayer or in VR. Version 0.3.1 and earlier stopped working right after the game started on a default BepInEx install; please update.
 
 ## Install (players)
 
