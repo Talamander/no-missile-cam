@@ -7,6 +7,8 @@
     "QoL",
     "Camera"
   ],
+  "imageUrl": "https://raw.githubusercontent.com/Talamander/no-missile-cam/5ed2d35f6b60f04cb7e6dc8f4314a4e1e53be8cc/docs/media/icon-512.png",
+  "imageHash": "9b200f79a859e450ab7ffbec41e52b4703fcdc26174be4fa1dcee3580ad31635",
   "urls": [
     {
       "name": "info",
