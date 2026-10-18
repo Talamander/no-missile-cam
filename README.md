@@ -24,7 +24,9 @@ fan-made and not affiliated with Shockfront Studios.
 Proton) with a default BepInEx install and no other mods: missile follow, the move to the next
 missile, target view and the key window all worked, and the game's spectator key no longer moves the
 camera to other aircraft while you fly. It is not yet tested on Windows, in multiplayer or in VR.
-Version 0.3.3 and earlier let the game's spectator key (Change Spectate Faction) move the camera to
+Version 0.3.4 and earlier put the Missile Cam Keys button on top of the game's **Open Control
+Bindings Menu** button, so the game's own key bindings could not be opened; 0.3.5 puts the two
+buttons side by side. Version 0.3.3 and earlier let the game's spectator key (Change Spectate Faction) move the camera to
 other aircraft while you were watching a missile or your target; please update. Version 0.3.1 and
 earlier also stopped working right after the game started on a default BepInEx install.
 

@@ -95,14 +95,33 @@ namespace Talamander.MissileCam
             foreach (var t in go.GetComponentsInChildren<TMP_Text>(true)) t.text = "Missile Cam Keys";
             foreach (var t in go.GetComponentsInChildren<Text>(true)) t.text = "Missile Cam Keys";
 
-            // Without a layout group the clone would sit on top of the original; put it just below.
-            if (source.transform.parent.GetComponent<LayoutGroup>() == null)
+            // The Edit Bindings button's parent (BindingsPanel) has a VerticalLayoutGroup that is switched off (0.34.2),
+            // so the clone lands exactly on top of the original and hides it. Without a working layout group, put
+            // the two buttons side by side, centred where the original was. With one, let it stack the clone and
+            // give the panel room for the extra row.
+            var parent = source.transform.parent;
+            var layout = parent.GetComponent<LayoutGroup>();
+            var src = (RectTransform)source.transform;
+            var rt = (RectTransform)go.transform;
+            if (layout == null || !layout.isActiveAndEnabled)
             {
-                var rt = (RectTransform)go.transform;
-                var src = (RectTransform)source.transform;
-                rt.anchoredPosition = src.anchoredPosition - new Vector2(0f, src.rect.height + 8f);
+                const float gap = 10f;
+                var shift = new Vector2((src.rect.width + gap) * 0.5f, 0f);
+                var centre = src.anchoredPosition;
+                src.anchoredPosition = centre - shift;
+                rt.anchoredPosition = centre + shift;
             }
-            Plugin.Log.LogInfo("Controls menu: added Missile Cam Keys button.");
+            else
+            {
+                var element = parent.GetComponent<LayoutElement>();
+                float extra = src.rect.height + ((layout as HorizontalOrVerticalLayoutGroup)?.spacing ?? 8f);
+                if (element != null)
+                {
+                    if (element.preferredHeight > 0f) element.preferredHeight += extra;
+                    if (element.minHeight > 0f) element.minHeight += extra;
+                }
+            }
+            Plugin.Log.LogInfo($"Controls menu: added Missile Cam Keys button ({(layout != null && layout.isActiveAndEnabled ? "stacked by " + layout.GetType().Name : "side by side")}).");
         }
 
         // ---- capture ----

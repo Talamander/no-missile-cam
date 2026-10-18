@@ -38,7 +38,7 @@ namespace Talamander.MissileCam
     {
         public const string Guid = "talamander.no.missilecam";
         public const string Name = "Missile Cam";
-        public const string Version = "0.3.4";
+        public const string Version = "0.3.5";
 
         internal static ManualLogSource Log;
 

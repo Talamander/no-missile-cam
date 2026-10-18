@@ -28,6 +28,15 @@
   "autoUpdateArtifacts": "True",
   "artifacts": [
     {
+      "fileName": "NoMissileCam-0.3.5-plugins.zip",
+      "version": "0.3.5",
+      "category": "release",
+      "type": "plugin",
+      "gameVersion": "0.34.2",
+      "downloadUrl": "https://github.com/Talamander/no-missile-cam/releases/download/v0.3.5/NoMissileCam-0.3.5-plugins.zip",
+      "hash": "sha256:e56c1d1745eeb97f0903b8a397dfc2db94854bf4187cb393f385c6deb7d84bd8"
+    },
+    {
       "fileName": "NoMissileCam-0.3.4-plugins.zip",
       "version": "0.3.4",
       "category": "release",
